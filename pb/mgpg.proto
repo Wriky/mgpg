@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package MGpg;
+
+service MGpg {
+    rpc GenerateKey (GenerateKeyRequest) returns (GenerateKeyResponse) {}
+}
+
+message GenerateKeyRequest {
+    string name = 1;
+    string comment = 2;
+    string email = 3;
+    int64 expiry = 4;
+    bool armor = 5;
+}
+
+message GenerateKeyReply {
+    bytes pub = 1;
+    bytes sec = 2;
+}
+
+message GenerateKeyResponse {
+    int64 error_code = 1;
+    string error_message = 2;
+    GenerateKeyReply response = 3;
+}
