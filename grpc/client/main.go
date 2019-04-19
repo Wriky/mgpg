@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -26,8 +27,9 @@ func NewGRPCClientService(conn *grpc.ClientConn) mgpg.Service {
 		generateKeyEndpoint = grpctransport.NewClient(conn, "MGpg.MGpg", "GenerateKey",
 			mgpg.EncodeGRPCGenerateKeyRequest, mgpg.DecodeGRPCGenerateKeyResponse, pb.GenerateKeyResponse{}).Endpoint()
 	}
-	return mgpg.MakeGRPCServer(context, generateKeyEndpoint)
-
+	return mgpg.Endpoints{
+		GenerateKeyEndpoint: generateKeyEndpoint,
+	}
 }
 
 func main() {
@@ -36,7 +38,25 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error: %v", err)
 		os.Exit(1)
 	}
-
 	defer conn.Close()
+
+	service := NewGRPCClientService(conn)
+	var result interface{}
+	result, err = service.GenerateKey(context.Background(), &pb.GenerateKeyRequest{
+		Name:    "yuan.wang",
+		Comment: "haha",
+		Email:   "yuan.wang@analyticservice.net",
+		Expiry:  50000000,
+		Armor:   false,
+	})
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	resp := result.(*pb.GenerateKeyResponse)
+	fmt.Printf("%x\n\n\n", resp.Response.GetPub())
+	fmt.Printf("%x", resp.Response.GetSec())
 
 }

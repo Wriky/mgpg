@@ -26,7 +26,7 @@ func NewMGpgService() Service {
 	return mgpgService{}
 }
 
-func (s mgpgService) GenerateKey(ctx context.Context, req interface{}) (interface{}, error) {
+func (s mgpgService) GenerateKey(ctx context.Context, req interface{}) (resp interface{}, err error) {
 	request := req.(*pb.GenerateKeyRequest)
 	config := &gpgeez.Config{Expiry: time.Duration(request.GetExpiry()) * time.Hour}
 	key, err := gpgeez.CreateKey(request.Name, request.Comment, request.Email, config)
@@ -55,14 +55,6 @@ func (s mgpgService) GenerateKey(ctx context.Context, req interface{}) (interfac
 	return &pb.GenerateKeyResponse{Response: &reply}, nil
 }
 
-// MakeGenerateKeyEndpoint : transform Endpoint
-func MakeGenerateKeyEndpoint(s Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*pb.GenerateKeyRequest)
-		return s.GenerateKey(ctx, req)
-	}
-}
-
 /* grpc */
 
 type grpcServer struct {
@@ -83,10 +75,10 @@ func (s *grpcServer) GenerateKey(ctx context.Context, req *pb.GenerateKeyRequest
 }
 
 // MakeGRPCServer : grpc server
-func MakeGRPCServer(ctx context.Context, grpcEndpoint endpoint.Endpoint) pb.MGpgServer {
+func MakeGRPCServer(ctx context.Context, grpcEndpoint Endpoints) pb.MGpgServer {
 	return &grpcServer{
 		generateKey: grpctransport.NewServer(
-			grpcEndpoint,
+			grpcEndpoint.GenerateKeyEndpoint,
 			DecodeGRPCGenerateKeyRequest,
 			EncodeGRPCGenerateKeyResponse,
 		),
@@ -119,4 +111,31 @@ func DecodeGRPCGenerateKeyResponse(_ context.Context, grpcReply interface{}) (in
 		return genericErr, nil
 	}
 	return reply, nil
+}
+
+/* Endpoints */
+
+// Endpoints : endpoint
+type Endpoints struct {
+	GenerateKeyEndpoint endpoint.Endpoint
+}
+
+// GenerateKey : implement Endpoints
+func (e Endpoints) GenerateKey(ctx context.Context, i interface{}) (interface{}, error) {
+	return e.GenerateKeyEndpoint(ctx, i)
+}
+
+// MakeEndpoints : make Endpoints;
+func MakeEndpoints(s Service) Endpoints {
+	return Endpoints{
+		GenerateKeyEndpoint: MakeGenerateKeyEndpoint(s),
+	}
+}
+
+// MakeGenerateKeyEndpoint : transform Endpoint
+func MakeGenerateKeyEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*pb.GenerateKeyRequest)
+		return s.GenerateKey(ctx, req)
+	}
 }

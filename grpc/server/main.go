@@ -24,8 +24,8 @@ func main() {
 	}
 
 	mgpgSrv := mgpg.NewMGpgService()
-	mgpgEndpoint := mgpg.MakeGenerateKeyEndpoint(mgpgSrv)
-	srv := mgpg.MakeGRPCServer(context.Background(), mgpgEndpoint)
+	mgpgEndpoints := mgpg.MakeEndpoints(mgpgSrv)
+	srv := mgpg.MakeGRPCServer(context.Background(), mgpgEndpoints)
 
 	grpcSrv := grpc.NewServer()
 	pb.RegisterMGpgServer(grpcSrv, srv)
