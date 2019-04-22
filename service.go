@@ -27,6 +27,19 @@ func NewMGpgService() Service {
 }
 
 func (s mgpgService) GenerateKey(ctx context.Context, req interface{}) (resp interface{}, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch x := r.(type) {
+			case string:
+				err = generics.Error{ErrorCode: -1001, ErrorMessage: x}
+			case error:
+				err = generics.Error{ErrorCode: -1002, ErrorMessage: x.Error()}
+			default:
+				err = generics.Error{ErrorCode: -1003, ErrorMessage: "Unknown panic"}
+			}
+		}
+	}()
+
 	request := req.(*pb.GenerateKeyRequest)
 	config := &gpgeez.Config{Expiry: time.Duration(request.GetExpiry()) * time.Hour}
 	key, err := gpgeez.CreateKey(request.Name, request.Comment, request.Email, config)
@@ -87,17 +100,20 @@ func MakeGRPCServer(ctx context.Context, grpcEndpoint Endpoints) pb.MGpgServer {
 
 // DecodeGRPCGenerateKeyRequest : decode request
 func DecodeGRPCGenerateKeyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	return grpcReq, nil
+	req := grpcReq.(*pb.GenerateKeyRequest)
+	return req, nil
 }
 
 // EncodeGRPCGenerateKeyResponse : encode response
 func EncodeGRPCGenerateKeyResponse(_ context.Context, grpcRep interface{}) (interface{}, error) {
-	return grpcRep, nil
+	resp := grpcRep.(*pb.GenerateKeyResponse)
+	return resp, nil
 }
 
 // EncodeGRPCGenerateKeyRequest : encode request
 func EncodeGRPCGenerateKeyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	return grpcReq, nil
+	req := grpcReq.(*pb.GenerateKeyRequest)
+	return req, nil
 }
 
 // DecodeGRPCGenerateKeyResponse : decode response

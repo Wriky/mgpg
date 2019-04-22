@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	"earlydata.com/waterdrop/microservice/gpg/pb"
 	"github.com/go-kit/kit/endpoint"
 
 	"yuan.wang/mgpg"
+	pb "yuan.wang/mgpg/pb"
 
 	"google.golang.org/grpc"
 
@@ -51,7 +51,7 @@ func main() {
 	})
 
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("where:" + err.Error())
 		return
 	}
 
