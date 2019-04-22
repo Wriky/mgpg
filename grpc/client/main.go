@@ -6,14 +6,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-kit/kit/endpoint"
-
 	"yuan.wang/mgpg"
 	pb "yuan.wang/mgpg/pb"
 
-	"google.golang.org/grpc"
-
+	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"google.golang.org/grpc"
 )
 
 const (
